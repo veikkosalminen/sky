@@ -666,81 +666,6 @@
                 </div>
             }
 
-            function createReactTableOfTheMonth({month, lat, lon, date}) {
-                const rows = []
-                for (let i = 0; i < 6; i++) {
-                    const row = []
-                    for (let j = 0; j < 7; j++) {
-                        const firstDayOfMonth = new Date(month.year, month.month, 1)
-                        const howManyDaysInMonth = new Date(month.year, month.month + 1, 0).getDate()
-                        const day = i * 7 + j - firstDayOfMonth.getDay()
-                        const isRealDay = day > 0 && day <= howManyDaysInMonth
-                        const className = day < 1 || day > howManyDaysInMonth ? "disabled" : ""
-                        const dayDate = new Date(date)
-                        dayDate.setMonth(month.month)
-                        dayDate.setDate(day)
-                        row.push(<td key={j} className="p-0">{isRealDay && <DayInCalendar lat={lat} lon={lon} date={dayDate} />}</td>)
-                    }
-                    rows.push(<tr key={i}>{row}</tr>)
-                }
-                return <table className="table" style={{width: "100%"}}>
-                    <thead>
-                    <tr>
-                    <th>Ma</th><th>Ti</th><th>Ke</th><th>To</th><th>Pe</th><th>La</th><th>Su</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {rows}
-                    </tbody>
-                    </table>
-                }
-
-            function NightCalendar({lat, lon, date}) {
-                return <>
-                {createReactTableOfTheMonth({lat: lat, lon: lon, date: date, month: {year: (new Date()).getYear(), month: (new Date()).getMonth()}})}
-                {createReactTableOfTheMonth({lat: lat, lon: lon, date: date, month: {year: (new Date()).getYear(), month: (new Date()).getMonth() + 1}})}
-                {createReactTableOfTheMonth({lat: lat, lon: lon, date: date, month: {year: (new Date()).getYear(), month: (new Date()).getMonth() + 2}})}
-                {createReactTableOfTheMonth({lat: lat, lon: lon, date: date, month: {year: (new Date()).getYear(), month: (new Date()).getMonth() + 3}})}
-                </>
-            }
-
-            function Camera() {
-
-                const [image, setImage] = React.useState(null)
-                const [loading, setLoading] = React.useState(false)
-
-                const sleep = () => new Promise(resolve => setTimeout(resolve, 5000))
-
-                const takePhoto = async () => {
-                    setLoading(true)
-                    setImage(null)
-                    try {
-                        const response = await fetch(`${telescopeUrl}/GPhoto CCD.CCD_EXPOSURE.CCD_EXPOSURE_VALUE/0.0001`, {method: "POST"})
-                        console.log(await response.text())
-                    }
-                    catch (e) {
-                        console.log(e)
-                    }
-                    await sleep()
-                    
-                    setImage("newest")
-                    setLoading(false)
-                }
-
-                return <div className="modal is-active">
-                    <div className="modal-background"></div>
-                        <div className="modal-content">
-                            <div className="is-flex is-flex-direction-column is-align-items-center">
-                                {image && <figure className="image is-4by4">
-                                    <img src={telescopeUrl + "/image/" + image} />
-                                </figure>}
-                                <button className={`button is-primary mt-6 ${loading && "is-loading"}`} onClick={() => takePhoto()}>Take photo</button>
-                            </div>
-                        </div>
-                    <button className="modal-close is-large" aria-label="close"></button>
-                </div>
-            }
-
             function Main() {
 
                 const lat = 60.812171
@@ -749,8 +674,6 @@
                 const [filter, setFilter] = React.useState(null)
                 const [sector, setSector] = React.useState(null)
                 const [date, setDate] = React.useState(Functions.getAutoTime(new Date(), lat, lon))
-                const [showCalendar, setShowCalendar] = React.useState(false)
-                const [showCamera, setShowCamera] = React.useState(false)
 
                 const skyObjects = getSkyObjects()
 
@@ -773,9 +696,7 @@
 
                 const orderObjects = objects.sort((a, b) => b.points - a.points)
 
-                return <>{ showCalendar ? 
-                        <NightCalendar lat={lat} lon={lon} date={date} /> :
-                        <><SkyList 
+                return <SkyList 
                             date={date} 
                             objects={orderObjects.slice(0, 30)} 
                             prev={() => setDate(new Date(date.setDate(date.getDate() - 1)))} 
@@ -785,11 +706,7 @@
                             sector={sector}
                             sectorChange={(sector) => setSector(sector)}
                             dateChange={(date) => setDate(date)}
-                            nightBarClicked={() => setShowCalendar(true)}
                         />
-                        {showCamera && <Camera />}
-                        </>
-                }</>
             }
 
             ReactDOM.render(
