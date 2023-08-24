@@ -468,11 +468,7 @@
                                 </h1>
                             </div>
                             <div className="level-right">
-                                {/*<div className="buttons has-addons">
-                                    <button onClick={() => prev && prev()} className="button">◀︎</button>
-                                    <button onClick={() => next && next()} className="button">▶︎</button>
-                                </div>*/}
-                                <button className="button">📷</button>
+                                {/*<button className="button">📷</button>*/}
                             </div>
                         </nav>
                         <div><MoonAndSunPhase lat={lat} lon={lon} date={date} onClick={() => nightBarClicked()} /></div>
@@ -486,7 +482,14 @@
                                 <SectorSelector sector={sector} sectorChange={sectorChange} /> <ObjectFilter filterChange={filterChange}/>
                             </div>
                         </nav>
-                        {objects.map((obj) => obj.type === "lunar" ? <LunarCard key={obj.name} object={obj} />: <Card key={obj.name} object={obj} />)}
+                        <div class="columns is-multiline">
+                            {objects.map((obj) => 
+                                <div class="column is-one-quarter">
+                                    { obj.type === "lunar" ? <LunarCard key={obj.name} object={obj} />: <Card key={obj.name} object={obj} /> }
+                                </div>
+                            )}
+                        </div>
+                        
                         </div>
                 </section>
             }
