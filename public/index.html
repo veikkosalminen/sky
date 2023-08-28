@@ -482,9 +482,9 @@
                                 <SectorSelector sector={sector} sectorChange={sectorChange} /> <ObjectFilter filterChange={filterChange}/>
                             </div>
                         </nav>
-                        <div class="columns is-multiline">
+                        <div className="columns is-multiline">
                             {objects.map((obj) => 
-                                <div class="column is-one-quarter">
+                                <div className="column is-one-quarter" key={obj.name}>
                                     { obj.type === "lunar" ? <LunarCard key={obj.name} object={obj} />: <Card key={obj.name} object={obj} /> }
                                 </div>
                             )}
@@ -666,10 +666,10 @@
                 </div>
             }
 
-            function Main() {
+            function MainContent({coords}) {
 
-                const lat = 60.812171
-                const lon = 25.127962
+                const lat = coords.lat
+                const lon = coords.lon
 
                 const [filter, setFilter] = React.useState(null)
                 const [sector, setSector] = React.useState(null)
@@ -707,6 +707,97 @@
                             sectorChange={(sector) => setSector(sector)}
                             dateChange={(date) => setDate(date)}
                         />
+            }
+
+            function CoordsInput({setCoords}) {
+                    
+                    const [lat, setLat] = React.useState("")
+                    const [lon, setLon] = React.useState("")
+
+                    const onClickAction = () => {
+                        setCoords({lat: parseFloat(lat, 10), lon: parseFloat(lon, 10)})
+                    }
+    
+                    return <div className="modal is-active">
+                            <div className="modal-background"></div>
+                            <div className="modal-content">
+                                <div className="box">
+                                    <h2 className="title is-2">Set your location</h2>
+                                    <div className="columns">
+                                        <div className="column">
+                                            <div className="control">
+                                                <input className="input" type="number" placeholder="Latitude" value={lat} onChange={e => setLat(e.target.value)} />
+                                            </div>
+                                        </div>
+                                        <div className="column">
+                                            <div className="control">
+                                                <input className="input" type="number" placeholder="Longitude" value={lon} onChange={e => setLon(e.target.value)} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button className="button" onClick={() => onClickAction()}>Set</button>
+                                </div>
+                            </div>
+                        </div>
+            }
+
+            function AddressInput({setCoords}) {
+                    const placeholder = "Rue Chanoinesse, 75004 Paris, France"
+                    const [address, setAddress] = React.useState("")
+                    const [error, setError] = React.useState(null)
+                    const [loading, setLoading] = React.useState(false)
+                    const [manual, setManual] = React.useState(false)
+                    
+                    const onClickAction = async () => {
+                        setLoading(true)
+                        setError(null)
+                        const response = await fetch("https://geocode.maps.co/search?q=" + (address || placeholder))
+                        const data = await response.json()
+
+                        setLoading(false)
+                        if (data.length === 0) return setError("No coordinates found for " + address)
+                        
+                        setCoords({lat: parseFloat(data[0].lat, 10), lon: parseFloat(data[0].lon, 10)})
+                    }
+
+                    if (manual) return <CoordsInput setCoords={setCoords} />
+    
+                    return <div className="modal is-active">
+                            <div className="modal-background"></div>
+                            <div className="modal-content">
+                                <div className="box">
+                                    <h2 className="title is-2">Give your address</h2>
+                                    <div className="columns">
+                                        <div className="column">
+                                            <div className="control">
+                                                <input className="input" type="text" placeholder={placeholder} value={address} onChange={e => setAddress(e.target.value)} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {!!error && <div className="notification is-danger is-light">{error}</div>}
+                                    <button className={`button ${loading ? "is-loading" : ""}`} onClick={() => onClickAction()}>Search coordinates</button>
+                                    <button className="button is-ghost" onClick={() => setManual(true)}>Set coordinates manually</button>
+                                </div>
+                            </div>
+                        </div>
+            }
+
+            function Main() {
+
+                //lat: 60.812171,
+                //lon: 25.127962,
+
+                const currentLocationFromLS = localStorage.getItem("currentLocation")
+                let currentCoords = null
+                if (currentLocationFromLS) currentCoords = JSON.parse(currentLocationFromLS)
+
+                const [coords, setCoords] = React.useState(currentCoords)
+
+                if (!coords) {
+                    return <AddressInput setCoords={(coords) => setCoords(coords)} />
+                }
+
+                return <MainContent coords={coords} />
             }
 
             ReactDOM.render(
